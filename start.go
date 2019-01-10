@@ -1,10 +1,16 @@
 package main
 
 func start(endChan chan interface{}) {
+	// creation channels for communication between modules
 	fbncChn := make(chan int, count)
 	fctrlChn := make(chan int, count)
 	lgChn := make(chan string, 2*count)
+
+	// creation calculation modules
 	nmbrs := Numbers{fbncChn}
+
+	// creation slice of Fibonacci modules for asynchronous
+	// calculation fibonacci numbers
 	fbncs := make([]*Fibonacci, 0, 0)
 	for i := 0; i < count; i++ {
 		fbnc := &Fibonacci{
@@ -14,6 +20,9 @@ func start(endChan chan interface{}) {
 		}
 		fbncs = append(fbncs, fbnc)
 	}
+
+	// creation slice of Factorial modules for asynchronous
+	// calculation of factorials
 	fctrls := make([]*Factorial, 0, 0)
 	for i := 0; i < count; i++ {
 		fctrl := &Factorial{
@@ -23,40 +32,19 @@ func start(endChan chan interface{}) {
 		fctrls = append(fctrls, fctrl)
 	}
 
+	// creation logger
 	lgr := Logger{
 		In:  lgChn,
 		Out: endChan,
 	}
+
+	// start goroutines containing functions for calculations
 	go lgr.Start()
 	for _, fctrl := range fctrls {
 		go fctrl.Start()
 	}
-	//go fbnc.Start()
 	for _, fbnc := range fbncs {
 		go fbnc.Start()
 	}
 	go nmbrs.Start()
 }
-
-// func fibonacci(out chan interface{}) {
-// 	for i := 0; i < 10; i++ {
-// 		if i == 0 || i == 1 {
-// 			out <- i
-// 		} else {
-// 			out <- (i - 1) + (i - 2)
-// 		}
-// 	}
-// }
-
-// func factorial(n int) int {
-// 	if n > 0 {
-// 		return n * factorial(n-1)
-// 	}
-// 	return 1
-// }
-
-// func logging(in chan interface{}) {
-// 	for msg := range in {
-// 		fmt.Println(msg.(*Dto).Name, msg.(*Dto).Data)
-// 	}
-// }
