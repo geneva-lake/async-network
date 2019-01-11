@@ -2,8 +2,8 @@ package main
 
 func start(endChan chan interface{}) {
 	// creation channels for communication between modules
-	fbncChn := make(chan int, count)
-	fctrlChn := make(chan int, count)
+	fbncChn := make(chan int)
+	fctrlChn := make(chan int)
 	lgChn := make(chan string, 2*count)
 
 	// creation calculation modules
