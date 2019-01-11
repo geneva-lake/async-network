@@ -2,10 +2,10 @@ This is example of asynchronous calculation network (async network pattern) powe
 We have initial data as ten integers from 0 to 9. We need calculate for each of them sum of two previous numbers (Fibonacci number) and then find factorial of resulting number. Also we want log results. Construct computational network. The first module simulate initial data and produce numbers from 0 to 9. Through the channel it sends numbers to calculation layer which finds Fibonacci number for received integer. It consists of ten modules. Second calculation layer finds factorials. Also there is logger module. It gets results from both layers and prints it. The scheme is depicted on figure.<br/>
 <br/>
 <br/>
-<img style="width: 80%; margin-top: 50px;" src="https://github.com/geneva-lake/async-network/blob/master/network.png"/>
+<img src="https://github.com/geneva-lake/async-network/blob/master/network.png"/>
 <br/>
 <br/>
-Let’s code. Initial element is realized as Numbers struct
+Initial element is realized as Numbers struct
 
 ```
 type Numbers struct {
@@ -59,34 +59,34 @@ func (f Factorial) Start() {
 So we need make channels and create modules
 
 ```
-    fbncChn := make(chan int)
-    fctrlChn := make(chan int)
-    lgChn := make(chan string, 20)
-    nmbrs := Numbers{fbncChn}
+fbncChn := make(chan int)
+fctrlChn := make(chan int)
+lgChn := make(chan string, 20)
+nmbrs := Numbers{fbncChn}
 
-    fbncs := make([]*Fibonacci, 0, 0)
-    for i := 0; i < 10; i++ {
-        fbnc := &Fibonacci{
-            In: fbncChn,
-            Out: fctrlChn,
-            ToLog: lgChn,
-        }
-        fbncs = append(fbncs, fbnc)
+fbncs := make([]*Fibonacci, 0, 0)
+for i := 0; i < 10; i++ {
+    fbnc := &Fibonacci{
+        In: fbncChn,
+        Out: fctrlChn,
+        ToLog: lgChn,
     }
+    fbncs = append(fbncs, fbnc)
+}
 
 fctrls := make([]*Factorial, 0, 0)
-    for i := 0; i < 10; i++ {
-        fctrl := &Factorial{
-            In: fctrlChn,
-            ToLog: lgChn,
-        }
-        fctrls = append(fctrls, fctrl)
+for i := 0; i < 10; i++ {
+    fctrl := &Factorial{
+        In: fctrlChn,
+        ToLog: lgChn,
     }
+    fctrls = append(fctrls, fctrl)
+}
 
-    lgr := Logger{
-        In: lgChn,
-        Out: endChan,
-    }
+lgr := Logger{
+    In: lgChn,
+    Out: endChan,
+}
 ```
 
 
@@ -94,11 +94,11 @@ And run Start functions in goroutines from end to beginning
 
 ```
 go lgr.Start()
-    for _, fctrl := range fctrls {
-        go fctrl.Start()
-    }
-    for _, fbnc := range fbncs {
-        go fbnc.Start()
-    }
-    go nmbrs.Start()
+for _, fctrl := range fctrls {
+    go fctrl.Start()
+}
+for _, fbnc := range fbncs {
+    go fbnc.Start()
+}
+go nmbrs.Start()
 ```
