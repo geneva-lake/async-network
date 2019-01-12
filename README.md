@@ -31,11 +31,11 @@ type Sum struct {
 }
 
 func (s Sum) Start() {
-	for nmbr := range s.In {
-		sum := s.DoWork(nmbr)
-		s.Out <- sum
-		s.ToLog <- fmt.Sprintf("Sum number: %s", 
-        		strconv.FormatFloat(sum, 'f', 0, 64))
+    for nmbr := range s.In {
+        sum := s.DoWork(nmbr)
+        s.Out <- sum
+        s.ToLog <- fmt.Sprintf("Sum number: %s", 
+            strconv.FormatFloat(sum, 'f', 0, 64))
 	}
 }
 ```
@@ -49,11 +49,11 @@ type Factorial struct {
 }
 
 func (f Factorial) Start() {
-	for sum := range f.In {
-		fctrl := f.DoWork(sum)
-		f.ToLog <- fmt.Sprintf("Factorial of %s is: %s", 
-        		strconv.FormatFloat(sum, 'f', 0, 64), strconv.FormatFloat(fctrl, 'e', 0, 64))
-	}
+    for sum := range f.In {
+        fctrl := f.DoWork(sum)
+        f.ToLog <- fmt.Sprintf("Factorial of %s is: %s", 
+            strconv.FormatFloat(sum, 'f', 0, 64), strconv.FormatFloat(fctrl, 'e', 0, 64))
+    }
 }
 ```
 
@@ -68,12 +68,12 @@ nmbrs := Numbers{sumChn}
 
 sums := make([]*Sum, 0, 0)
 for i := 0; i < count; i++ {
-	sum := &Sum{
-		In:    sumChn,
-		Out:   fctrlChn,
-		ToLog: lgChn,
-	}
-	sums = append(sums, sum)
+    sum := &Sum{
+        In:    sumChn,
+        Out:   fctrlChn,
+        ToLog: lgChn,
+    }
+    sums = append(sums, sum)
 }
 
 fctrls := make([]*Factorial, 0, 0)
