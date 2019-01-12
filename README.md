@@ -100,7 +100,7 @@ for _, fctrl := range fctrls {
     go fctrl.Start()
 }
 for _, sum := range sums {
-	go sum.Start()
+    go sum.Start()
 }
 go nmbrs.Start()
 ```
