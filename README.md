@@ -1,5 +1,5 @@
 This is example of asynchronous calculation network (async network pattern) powered by golang goroutines.<br/>
-We have initial data as ten integers from 0 to 9. We need calculate for each of them sum of two previous numbers (Fibonacci number) and then find factorial of resulting number. Also we want log results. Construct computational network. The first module simulate initial data and produce numbers from 0 to 9. Through the channel it sends numbers to calculation layer which finds Fibonacci number for received integer. It consists of ten modules. Second calculation layer finds factorials. Also there is logger module. It gets results from both layers and prints it. The scheme is depicted on figure.<br/>
+We have initial data as ten integers from 0 to 9. We need calculate for each of them sum of it and all previous integers and then find factorial of resulting number. Also we want log results. Construct computational network. The first module simulate initial data and produce numbers from 0 to 9. Through the channel it sends numbers to calculation layer which finds previous sum for received integer. It consists of ten modules. Second calculation layer finds factorials. Also there is logger module. It gets results from both layers and prints it. The scheme is depicted on figure.<br/>
 <br/>
 <br/>
 <img src="https://github.com/geneva-lake/async-network/blob/master/network.png"/>
@@ -9,7 +9,7 @@ Initial element is realized as Numbers struct
 
 ```
 type Numbers struct {
-    Out chan int
+    Out chan float64
 }
 
 func (n Numbers) Start() {
@@ -21,21 +21,21 @@ func (n Numbers) Start() {
 
 DoWork function produce slice of ten integers. 
 
-Modules in first layer are realized as Fibonacci struct. It has incoming channel for receiving data, out coming channel for result and functions. Function DoWork find Fibonacci number and function Start gets data from channel, calls DoWork and send result to next computation layer and string to logger. 
+Modules in first layer are realized as Sum struct. It has incoming channel for receiving data, out coming channel for result and functions. Function DoWork find sum of previous integers and function Start gets data from channel, calls DoWork and send result to next computation layer and string to logger. 
 
 ```
-type Fibonacci struct {
-    In chan int
-    Out chan int
+type Sum struct {
+    In chan float64
+    Out chan float64
     ToLog chan string
 }
 
-func (f Fibonacci) Start() {
-    for nmbr := range f.In {
-        fnmbr := f.DoWork(nmbr)
-        f.Out <- fnmbr
-        f.ToLog <- fmt.Sprintf("Fibonacci number: %d", fnmbr)
-    }
+func (s Sum) Start() {
+	for nmbr := range s.In {
+		sum := s.DoWork(nmbr)
+		s.Out <- sum
+		s.ToLog <- fmt.Sprintf("Sum number: %s", strconv.FormatFloat(sum, 'f', 0, 64))
+	}
 }
 ```
 
@@ -43,15 +43,15 @@ Second calculation level organized similarly.
 
 ```
 type Factorial struct {
-    In chan int
+    In chan float64
     ToLog chan string
 }
 
 func (f Factorial) Start() {
-    for fnmbr := range f.In {
-        fctrl := f.DoWork(fnmbr)
-        f.ToLog <- fmt.Sprintf("Factorial of %d is: %d", fnmbr, fctrl)
-    }
+	for sum := range f.In {
+		fctrl := f.DoWork(sum)
+		f.ToLog <- fmt.Sprintf("Factorial of %s is: %s", strconv.FormatFloat(sum, 'f', 0, 64), strconv.FormatFloat(fctrl, 'e', 0, 64))
+	}
 }
 ```
 
@@ -59,19 +59,19 @@ func (f Factorial) Start() {
 So we need make channels and create modules
 
 ```
-fbncChn := make(chan int)
-fctrlChn := make(chan int)
+sumChn := make(chan float64)
+fctrlChn := make(chan float64)
 lgChn := make(chan string, 20)
-nmbrs := Numbers{fbncChn}
+nmbrs := Numbers{sumChn}
 
-fbncs := make([]*Fibonacci, 0, 0)
-for i := 0; i < 10; i++ {
-    fbnc := &Fibonacci{
-        In: fbncChn,
-        Out: fctrlChn,
-        ToLog: lgChn,
-    }
-    fbncs = append(fbncs, fbnc)
+sums := make([]*Sum, 0, 0)
+for i := 0; i < count; i++ {
+	sum := &Sum{
+		In:    sumChn,
+		Out:   fctrlChn,
+		ToLog: lgChn,
+	}
+	sums = append(sums, sum)
 }
 
 fctrls := make([]*Factorial, 0, 0)
@@ -97,8 +97,8 @@ go lgr.Start()
 for _, fctrl := range fctrls {
     go fctrl.Start()
 }
-for _, fbnc := range fbncs {
-    go fbnc.Start()
+for _, sum := range sums {
+	go sum.Start()
 }
 go nmbrs.Start()
 ```
