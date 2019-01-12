@@ -2,21 +2,24 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 )
 
+// Count of initial numbers and goroutines in each layer
 const count = 10
 
-// Numbers produces numbers to create fibonacci numbers from
+// Numbers produces numbers to create Sum numbers from
 type Numbers struct {
-	Out chan int
+	Out chan float64
 }
 
 // DoWork is standart function for do some work.
 // In this case it produces slice of numbers
-func (n Numbers) DoWork() []int {
-	res := make([]int, 0, 0)
-	for i := 0; i < count; i++ {
+func (n Numbers) DoWork() []float64 {
+	res := make([]float64, 0, 0)
+	var i float64
+	for i = 0; i < count; i++ {
 		res = append(res, i)
 	}
 	return res
@@ -30,42 +33,42 @@ func (n Numbers) Start() {
 	}
 }
 
-// Fibonacci produce fibonacci numbers
-type Fibonacci struct {
-	In    chan int
-	Out   chan int
+// Sum produce sum of previous integers
+type Sum struct {
+	In    chan float64
+	Out   chan float64
 	ToLog chan string
 }
 
 // DoWork is standart function for do some work.
-// In this case it calculates fibonacci numbers
-func (f Fibonacci) DoWork(i int) int {
-	if i == 0 || i == 1 {
-		return i
+// In this case it calculates sum of previous integers
+func (s Sum) DoWork(i float64) float64 {
+	if i > 0 {
+		return i + s.DoWork(i-1)
 	}
-	return (i - 1) + (i - 2)
+	return 0
 }
 
 // Start is a standart function for receiving and sending data.
-// In this case it gets number from in channel, calculates fibonacci number for it and sends it to out channel.
+// In this case it gets number from in channel, calculates sum for it and sends it to out channel.
 // Also it sends data to logger
-func (f Fibonacci) Start() {
-	for nmbr := range f.In {
-		fnmbr := f.DoWork(nmbr)
-		f.Out <- fnmbr
-		f.ToLog <- fmt.Sprintf("Fibonacci number: %d", fnmbr)
+func (s Sum) Start() {
+	for nmbr := range s.In {
+		sum := s.DoWork(nmbr)
+		s.Out <- sum
+		s.ToLog <- fmt.Sprintf("Sum number: %s", strconv.FormatFloat(sum, 'f', 0, 64))
 	}
 }
 
 // Factorial calculates factorial
 type Factorial struct {
-	In    chan int
+	In    chan float64
 	ToLog chan string
 }
 
 // DoWork is standart function for do some work.
 // In this case it calculates factorial of number
-func (f Factorial) DoWork(i int) int {
+func (f Factorial) DoWork(i float64) float64 {
 	if i > 0 {
 		return i * f.DoWork(i-1)
 	}
@@ -76,9 +79,9 @@ func (f Factorial) DoWork(i int) int {
 // In this case it gets number from in channel and calculates its factorial.
 // Also it sends data to logger
 func (f Factorial) Start() {
-	for fnmbr := range f.In {
-		fctrl := f.DoWork(fnmbr)
-		f.ToLog <- fmt.Sprintf("Factorial of %d is: %d", fnmbr, fctrl)
+	for sum := range f.In {
+		fctrl := f.DoWork(sum)
+		f.ToLog <- fmt.Sprintf("Factorial of %s is: %s", strconv.FormatFloat(sum, 'f', 0, 64), strconv.FormatFloat(fctrl, 'e', 0, 64))
 	}
 }
 

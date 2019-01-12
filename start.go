@@ -2,23 +2,23 @@ package main
 
 func start(endChan chan interface{}) {
 	// creation channels for communication between modules
-	fbncChn := make(chan int)
-	fctrlChn := make(chan int)
+	sumChn := make(chan float64)
+	fctrlChn := make(chan float64)
 	lgChn := make(chan string, 2*count)
 
 	// creation calculation modules
-	nmbrs := Numbers{fbncChn}
+	nmbrs := Numbers{sumChn}
 
-	// creation slice of Fibonacci modules for asynchronous
-	// calculation fibonacci numbers
-	fbncs := make([]*Fibonacci, 0, 0)
+	// creation slice of Sum modules for asynchronous
+	// calculation sum of previous integers
+	sums := make([]*Sum, 0, 0)
 	for i := 0; i < count; i++ {
-		fbnc := &Fibonacci{
-			In:    fbncChn,
+		sum := &Sum{
+			In:    sumChn,
 			Out:   fctrlChn,
 			ToLog: lgChn,
 		}
-		fbncs = append(fbncs, fbnc)
+		sums = append(sums, sum)
 	}
 
 	// creation slice of Factorial modules for asynchronous
@@ -43,8 +43,8 @@ func start(endChan chan interface{}) {
 	for _, fctrl := range fctrls {
 		go fctrl.Start()
 	}
-	for _, fbnc := range fbncs {
-		go fbnc.Start()
+	for _, sum := range sums {
+		go sum.Start()
 	}
 	go nmbrs.Start()
 }
