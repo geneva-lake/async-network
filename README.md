@@ -52,7 +52,7 @@ func (f Factorial) Start() {
 	for sum := range f.In {
 		fctrl := f.DoWork(sum)
 		f.ToLog <- fmt.Sprintf("Factorial of %s is: %s", 
-            strconv.FormatFloat(sum, 'f', 0, 64), strconv.FormatFloat(fctrl, 'e', 0, 64))
+           strconv.FormatFloat(sum, 'f', 0, 64), strconv.FormatFloat(fctrl, 'e', 0, 64))
 	}
 }
 ```
