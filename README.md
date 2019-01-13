@@ -36,7 +36,7 @@ func (s Sum) Start() {
         s.Out <- sum
         s.ToLog <- fmt.Sprintf("Sum number: %s", 
             strconv.FormatFloat(sum, 'f', 0, 64))
-	}
+    }
 }
 ```
 
